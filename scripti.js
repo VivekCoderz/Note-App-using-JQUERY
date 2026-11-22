@@ -1,6 +1,11 @@
 $(document).ready(function () {
   let notes = [];
 
+  // Escape user text before putting it into HTML (stops <script>/<img onerror> injection)
+  function escapeHtml(text) {
+    return $("<div>").text(text).html();
+  }
+
   $("body").css({
     "font-family": "Arial",
     "background-color": "#f2f2f2",
@@ -9,6 +14,7 @@ $(document).ready(function () {
 
   $("#container").css({
     width: "700px",
+    "max-width": "calc(100% - 32px)",
     margin: "40px auto",
   });
 
@@ -55,8 +61,8 @@ $(document).ready(function () {
   });
 
   $("#add").click(function () {
-    let title = $("#title").val();
-    let content = $("#content").val();
+    let title = $("#title").val().trim();
+    let content = $("#content").val().trim();
 
     if (title == "" || content == "") {
       alert("Please enter title and content");
@@ -85,9 +91,9 @@ $(document).ready(function () {
 
                 <div class="note">
 
-                    <h3>${note.title}</h3>
+                    <h3>${escapeHtml(note.title)}</h3>
 
-                    <p>${note.content}</p>
+                    <p>${escapeHtml(note.content)}</p>
 
                     <button class="edit"
                         data-index="${index}">
@@ -129,6 +135,24 @@ $(document).ready(function () {
       color: "white",
       "margin-left": "5px",
     });
+
+    // Keep the current search applied after the list is redrawn
+    filterNotes();
+  }
+
+  function filterNotes() {
+    let value = $("#search").val().toLowerCase();
+
+    $(".note").each(function () {
+      // Only search the title and content, not the Edit/Delete button labels
+      let text = $(this).find("h3, p").text().toLowerCase();
+
+      if (text.includes(value)) {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
   }
 
   $("#notes").on("click", ".delete", function () {
@@ -151,17 +175,5 @@ $(document).ready(function () {
     showNotes();
   });
 
-  $("#search").keyup(function () {
-    let value = $(this).val().toLowerCase();
-
-    $(".note").each(function () {
-      let text = $(this).text().toLowerCase();
-
-      if (text.includes(value)) {
-        $(this).show();
-      } else {
-        $(this).hide();
-      }
-    });
-  });
+  $("#search").on("input", filterNotes);
 });
